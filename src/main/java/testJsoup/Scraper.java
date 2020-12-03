@@ -25,18 +25,11 @@ import org.jsoup.select.Elements;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Scraper {
-	public static final String URL_WIKIE = "https://www.imdb.com/title/tt0111161/";
-	
+
 	public static ArrayList<Film> filmsList = new ArrayList<Film>();
 
 	public static void main(String[] args) throws Exception {
-		//getTitle(URL_WIKIE);
-		//getHRef(URL_WIKIE);
-		//getImgs(URL_WIKIE);
-		//getH4(URL_WIKIE);
-		//getSummary(URL_WIKIE);
-		//getSummaryItem(URL_WIKIE);
-		//getCast(URL_WIKIE);
+
 		readExcel();
 
 		Gson gson = new Gson();
@@ -54,99 +47,26 @@ public class Scraper {
 	}
 	
 	/**
-	 * Este método recupera el título de cualquier página web
-	 * @param url
-	 * @throws IOException
-	 */
-	public static void getTitle(String url) throws IOException{
-		Document doc = Jsoup.connect(url).get();
-		System.out.println(url + ":\t" + doc.title());
-		System.out.println();
-	}
-	
-	/**
-	 * Este método recupera todos los href de una página web y los muestra por pantalla
-	 * @param url
-	 * @throws IOException
-	 */
-	public static void getHRef(String url) throws IOException{
-		Document doc = Jsoup.connect(url).get();
-		System.out.println("a href from:\t" + doc.title());
-		Elements lst = doc.select("a[href]");
-		for (Element elem:lst) {
-			System.out.println("\t:" + elem.text());
-		}
-		System.out.println();
-	}
-	
-	/**
-	 * Este método recupera todas las imagenes de una página web y las muestra por pantalla
-	 * @param url
-	 * @throws IOException
-	 */
-	public static void getImgs(String url) throws IOException{
-		Document doc = Jsoup.connect(url).get();
-		System.out.println("Imgs from:\t" + doc.title());
-		Elements lst = doc.select("img[src~=[\\w\\d\\W]logo[\\w\\d\\W]]");
-		for (Element elem:lst) {
-			System.out.println("\t:" + elem.attr("src"));
-		}
-		System.out.println();
-	}
-	
-	/**
-	 * Este método recupera todas las etiquetas h4 de una página web y las muestra por pantalla
-	 * @param url
-	 * @throws IOException
-	 */
-	public static void getH4(String url) throws IOException{
-		Document doc = Jsoup.connect(url).get();
-		System.out.println("H4 from:\t" + doc.title());
-		//obtenemos todas las etiquetas h4
-		Elements lst = doc.select("h4");
-		for (Element elem:lst) {
-			System.out.println("\t:" + elem.childNode(0).toString());
-		}
-		System.out.println();
-	}
-	
-	/**
 	 * Este método recupera todas las etiquetas div summary_tex de una página web y las muestra por pantalla
 	 * @param url
 	 * @throws IOException
+	 * @return String
 	 */
 	public static String getSummary(String url) throws IOException{
 		Document doc = Jsoup.connect(url).get();
-		//System.out.println("Summary from:\t" + doc.title());
-		//obtenemos el div summary_text
-		String description = "";
-		Elements lst = doc.select("div.summary_text");
+		StringBuilder description = new StringBuilder();
+		Elements lst = doc.select("div.summary_text"); //<div clas="summary_text"> </div>
 		for (Element elem:lst) {
-			description = description + elem.text();
+			description.append(elem.text());
 		}
-		return description;
-	}
-	
-	
-	/**
-	 * Este método recupera todas las etiquetas div credit_summary_item de una página web y las muestra por pantalla
-	 * @param url
-	 * @throws IOException
-	 */
-	public static void getSummaryItem(String url) throws IOException{
-		Document doc = Jsoup.connect(url).get();
-		System.out.println("Items from:\t" + doc.title());
-		//obtenemos el div credit_summary_item
-		Elements lst = doc.select("div.credit_summary_item");
-		for (Element elem:lst) {
-			System.out.println("\t:" + elem.text());
-		}
-		System.out.println();
+		return description.toString();
 	}
 	
 	/**
 	 * Metodo para recuperar los actores que actuaron en la pelicula
-	 * @throws IOException 
+	 * @param url
+	 * @throws IOException
+	 * @return ArrayList<String>
 	 */
 	public static ArrayList<String> getCast(String url) throws IOException {
 		Document doc = Jsoup.connect(url).get();
@@ -160,12 +80,10 @@ public class Scraper {
 		    try{
 				cast.add(cols.get(1).select("a").text());
 			} catch (IndexOutOfBoundsException e){
-
+				//TODO
 			}
 		}
-			
 		return cast;
-		
 	}
 	
 	
@@ -187,35 +105,33 @@ public class Scraper {
 	        	XSSFCell linkCell = row.getCell(1);
 	        	XSSFCell titleCell = row.getCell(2);
 	        	//XSSFCell scoreCell = row.getCell(3);
-	        	XSSFCell genereCell = row.getCell(4);
+	        	XSSFCell genreCell = row.getCell(4);
 	        	//XSSFCell posterCell = row.getCell(5);
 
 	            int imdbId = (int) imdbIdCell.getNumericCellValue();
 	            String link = linkCell.getStringCellValue();
-	            String[] titleAux = titleCell.getStringCellValue().split("[\\(\\)]");
+	            String[] titleAux = titleCell.getStringCellValue().split("[()]");
 	            String title = titleAux[0];
 	            int year = 0;
-	            for(int j = 0; j<titleAux.length; j++) {
-	            	if(isNumeric(titleAux[j])) {
-						year = Integer.parseInt(titleAux[j]);
+				for (String titleAu : titleAux) {
+					if (isNumeric(titleAu)) {
+						year = Integer.parseInt(titleAu);
 					}
 				}
 	            //double score = scoreCell.getNumericCellValue();
-	            String[] genreList = genereCell.getStringCellValue().split("\\|");
+	            String[] genreList = genreCell.getStringCellValue().split("\\|");
 	            //String poster = posterCell.getStringCellValue();
 	            
 	            String description = getSummary(link);
-	            
 	            ArrayList<String> cast = getCast(link);
 	            
 	            film = new Film(imdbId, description, title, year, genreList, cast);
 
 		 		filmsList.add(film);
 
-
 	            System.out.println(film.toString());
 
-				/**
+				/*
 	            ObjectMapper mapper = new ObjectMapper();
 	            
 	            Map<String, Object> filmMap = new HashMap<String, Object>();
@@ -238,9 +154,7 @@ public class Scraper {
 	            **/
 
 	        }
-	        
 	        wb.close();
-	        
 	    }
 
 	public static boolean isNumeric(String strNum) {
@@ -248,12 +162,10 @@ public class Scraper {
 			return false;
 		}
 		try {
-			int d = Integer.parseInt(strNum);
+			Integer.parseInt(strNum);
 		} catch (NumberFormatException nfe) {
 			return false;
 		}
 		return true;
 	}
-	
-	
 }

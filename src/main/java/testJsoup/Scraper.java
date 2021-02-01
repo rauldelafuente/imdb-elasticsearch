@@ -6,6 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 
 import com.google.gson.Gson;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -92,52 +95,73 @@ public class Scraper {
 	 * @return
 	 */
 	 private static void readExcel() throws IOException {
-		    XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream("MovieGenreIGC_v3.xlsx"));
-		    XSSFSheet sheet = wb.getSheetAt(0);
-	        
-	        Film film;
+		 XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream("MovieGenreIGC_v3.xlsx"));
+		 XSSFSheet sheet = wb.getSheetAt(0);
 
-	        int rows = sheet.getLastRowNum();
-	        for (int i = 1; i < rows; ++i) {
-	        	System.out.println(i);
-	        	XSSFRow row = sheet.getRow(i);
+		 List<XSSFRow> rowList = new ArrayList<XSSFRow>();
 
-	        	XSSFCell imdbIdCell = row.getCell(0);
-	        	XSSFCell linkCell = row.getCell(1);
-	        	XSSFCell titleCell = row.getCell(2);
-	        	XSSFCell genreCell = row.getCell(4);
+		 int rows = sheet.getLastRowNum();
+		 for (int i = 1; i < rows; ++i) {
+			 rowList.add(sheet.getRow(i));
+		 }
 
-	            int imdbId = (int) imdbIdCell.getNumericCellValue();
-	            String link = linkCell.getStringCellValue();
-	            String[] titleAux = titleCell.getStringCellValue().split("[()]");
-	            String title = titleAux[0];
-	            int year = 0;
-				for (String titleAu : titleAux) {
-					if (isNumeric(titleAu)) {
-						year = Integer.parseInt(titleAu);
-					}
-				}
-				String[] genreList = new String[0];
-	            try{
-	            	genreList = genreCell.getStringCellValue().split("\\|");
-				} catch (NullPointerException e) {
+		 final int parallelism = 8;
+		 ForkJoinPool forkJoinPool = null;
+		 try {
+			 forkJoinPool = new ForkJoinPool(parallelism);
+			 rowList.parallelStream().forEach((row) -> {
 
-				}
-	            
-	            String description = getSummary(link);
-	            ArrayList<String> cast = getCast(link);
-	            
-	            film = new Film(imdbId, description, title, year, genreList, cast);
+				 Film film;
 
-				Gson gson = new Gson();
-				String filmOutput = gson.toJson(film);
+				 XSSFCell imdbIdCell = row.getCell(0);
+				 XSSFCell linkCell = row.getCell(1);
+				 XSSFCell titleCell = row.getCell(2);
+				 XSSFCell genreCell = row.getCell(4);
 
-				finalContent.append("{\"index\":{\"_id\":\"").append(imdbId).append("\"}}\n").
-						append(filmOutput).append("\n");
+				 int imdbId = (int) imdbIdCell.getNumericCellValue();
+				 System.out.println(imdbId);
+				 String link = linkCell.getStringCellValue();
+				 String[] titleAux = titleCell.getStringCellValue().split("[()]");
+				 String title = titleAux[0];
+				 int year = 0;
+				 for (String titleAu : titleAux) {
+					 if (isNumeric(titleAu)) {
+						 year = Integer.parseInt(titleAu);
+					 }
+				 }
+				 String[] genreList = new String[0];
+				 try {
+					 genreList = genreCell.getStringCellValue().split("\\|");
+				 } catch (NullPointerException e) {
 
-			}
-	        wb.close();
-	    }
+				 }
+
+				 String description = null;
+				 ArrayList<String> cast = new ArrayList<String>();
+				 try {
+					 description = getSummary(link);
+					 cast = getCast(link);
+				 } catch (IOException e) {
+					 e.printStackTrace();
+				 }
+
+
+				 film = new Film(imdbId, description, title, year, genreList, cast);
+
+				 Gson gson = new Gson();
+				 String filmOutput = gson.toJson(film);
+
+				 finalContent.append("{\"index\":{\"_id\":\"").append(imdbId).append("\"}}\n").
+						 append(filmOutput).append("\n");
+
+			 });
+			 wb.close();
+		 } catch (Exception e){
+		 	throw new RuntimeException(e);
+		 } finally {
+		 	if (forkJoinPool != null) forkJoinPool.shutdown();
+		 }
+	 }
 
 	public static boolean isNumeric(String strNum) {
 		if (strNum == null) {

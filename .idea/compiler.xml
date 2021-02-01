@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="testJsoup" target="1.5" />
+      <module name="testJsoup" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>

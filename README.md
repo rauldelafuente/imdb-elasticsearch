@@ -6,7 +6,9 @@ Script which reads the content of an xls document with more than 50,000 IMDB fil
 
 Have the Excel document in the same folder as the project.
 
-Also you need to create and index with the following mapping in Elastichsearch
+Also you need to create and index with the following mapping in Elastichsearch.
+
+You canfind this script in mapping.sh
 
 ```bash
 curl -X PUT "localhost:9200/films?pretty" -H 'Content-Type: application/json' -d'
@@ -68,7 +70,9 @@ mvn exec:java -Dexec.mainClass="testJsoup.Scraper"
 
 
 ## Add information to Elasticsearch
-Once you have the JSON written in Bulk format, you only have to write the following command in your bash (Obviously you need already an index in Elasticsearch)
+Once you have the JSON written in Bulk format, you only have to write the following command in your bash (Obviously you need already an index in Elasticsearch).
+
+Yuu can find this script in insert_documents.sh
 
 ```bash
 curl -XPOST -H "Content-Type: application/json" "localhost:9200/films/_bulk?pretty" --data-binary "@resultBulk.json"

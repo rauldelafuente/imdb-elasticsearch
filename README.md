@@ -2,7 +2,7 @@
 
 Script which reads the content of an xlsx document with more than 50,000 IMDB films and create a JSON document to upload it later via Bulk API to Elasticsearch. The xls document also have te url of the film page in IMDB and we access it in order to be able to get more information.
 
-## Requirements
+## Requirements :pencil:
 
 Have the Excel document in the same folder as the project.
 
@@ -50,7 +50,7 @@ curl -X PUT "localhost:9200/films?pretty" -H 'Content-Type: application/json' -d
 ```
 
 
-## Run
+## Run :running_man:
 
 Go to the root directory and write the following command in bash.
 
@@ -73,7 +73,7 @@ mvn exec:java -Dexec.mainClass="testJsoup.Scraper"
 ```
 
 
-## Add information to Elasticsearch
+## Add information to Elasticsearch :outbox_tray:
 Once you have the JSON written in Bulk format, you only have to write the following command in your bash (Obviously you need already an index in Elasticsearch).
 
 Yuu can find this script in insert_documents.sh

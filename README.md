@@ -1,6 +1,6 @@
 # imdb-elasticsearch
 
-Script which reads the content of an xls document with more than 50,000 IMDB films and create a JSON document to upload it later via Bulk API to Elasticsearch. The xls document also have te url of the film page in IMDB and we access it in order to be able to get more information.
+Script which reads the content of an xlsx document with more than 50,000 IMDB films and create a JSON document to upload it later via Bulk API to Elasticsearch. The xls document also have te url of the film page in IMDB and we access it in order to be able to get more information.
 
 ## Requirements
 
@@ -51,6 +51,10 @@ curl -X PUT "localhost:9200/films?pretty" -H 'Content-Type: application/json' -d
 
 
 ## Run
+
+Go to the root directory and write the following command in bash.
+
+You can find also a script called run.sh
 
 ```bash
 mvn exec:java -Dexec.mainClass="testJsoup.Scraper" 
